@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Degrees & Democracies</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #080807;
+  --dark: #111110;
+  --surface: #1a1917;
+  --card: #211f1d;
+  --border: rgba(255,255,255,0.07);
+  --text: #ede9e0;
+  --muted: #7a746a;
+  --faint: rgba(237,233,224,0.35);
+
+  /* Thematic palette */
+  --morocco: #e8a020;       /* desert gold — Morocco, vulnerability, warmth */
+  --democracy: #4a8fa8;     /* cool slate — democratic institutions */
+  --danger: #c0392b;        /* urgent red — underperformers, failure */
+  --nature: #3d7a5a;        /* forest green — climate action, performance */
+  --neutral: rgba(255,255,255,0.18);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--black);
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 400;
+  overflow-x: hidden;
+}
+
+/* ── HERO ── */
+#hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 80px 8vw;
+  position: relative;
+  overflow: hidden;
+  background: var(--black);
+  border-bottom: 1px solid var(--border);
+}
+#hero::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 50%;
+  height: 100%;
+  background: radial-gradient(ellipse at 80% 40%, rgba(232,160,32,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+#hero-canvas { position:absolute; inset:0; opacity:0.15; }
+
+.hero-kicker {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--morocco);
+  margin-bottom: 28px;
+  position: relative;
+}
+
+#hero h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.8rem, 5.5vw, 5.2rem);
+  font-weight: 400;
+  line-height: 1.0;
+  max-width: 820px;
+  position: relative;
+  margin-bottom: 20px;
+  color: var(--text);
+  letter-spacing: 0.01em;
+}
+
+.hero-sub {
+  font-family: 'Space Mono', monospace;
+  font-size: clamp(0.7rem, 1vw, 0.82rem);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 28px;
+  position: relative;
+  max-width: 700px;
+  line-height: 1.6;
+}
+
+.hero-deck {
+  font-size: clamp(1rem, 1.4vw, 1.15rem);
+  font-weight: 400;
+  line-height: 1.75;
+  max-width: 560px;
+  color: var(--faint);
+  position: relative;
+  margin-bottom: 0;
+}
+
+.scroll-cue {
+  position: absolute;
+  bottom: 32px;
+  left: 8vw;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  animation: cue 2.4s ease-in-out infinite;
+}
+.scroll-cue svg { width:14px; height:14px; stroke:var(--muted); fill:none; }
+@keyframes cue {
+  0%,100%{opacity:.3;transform:translateY(0)}
+  50%{opacity:.9;transform:translateY(6px)}
+}
+
+/* ── PROSE SECTIONS ── */
+.prose-section {
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 90px 32px;
+  border-top: 1px solid var(--border);
+}
+.prose-section:first-of-type { border-top: none; }
+
+.eyebrow {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--morocco);
+  margin-bottom: 18px;
+  display: inline-block;
+}
+
+.prose-section h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 1.05;
+  margin-bottom: 28px;
+  letter-spacing: 0.01em;
+  color: var(--text);
+}
+
+.prose-section p {
+  font-size: 1.05rem;
+  line-height: 1.9;
+  color: rgba(237,233,224,0.7);
+  margin-bottom: 1.4em;
+}
+.prose-section p strong { color: var(--text); font-weight: 600; }
+.prose-section p em { color: var(--muted); font-style: italic; }
+
+/* ── VIDEO PLACEHOLDER ── */
+.video-placeholder {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 80px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin: 24px 0;
+  gap: 14px;
+}
+.video-icon { font-size: 2.4rem; color: var(--morocco); line-height: 1; }
+.video-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  color: var(--text);
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+.video-sub {
+  font-size: 0.84rem;
+  color: var(--muted);
+  margin: 0;
+  max-width: 380px;
+  line-height: 1.65;
+}
+
+/* ── SCROLLY ── */
+#scrolly { position:relative; display:flex; }
+
+#sticky-chart {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 55%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: var(--dark);
+  border-right: 1px solid var(--border);
+}
+#chart-svg-wrap { width:100%; max-width:540px; }
+
+#steps { width:45%; padding:0 0 60vh 0; background:var(--black); }
+
+.step {
+  min-height: 75vh;
+  display: flex;
+  align-items: center;
+  padding: 40px 48px 40px 44px;
+  opacity: 0.1;
+  transition: opacity 0.5s;
+  border-bottom: 1px solid var(--border);
+}
+.step.active { opacity: 1; }
+.step-inner { max-width: 380px; }
+
+.step-num {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--morocco);
+  margin-bottom: 14px;
+  display: inline-block;
+}
+
+.step h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  line-height: 1.05;
+  margin-bottom: 18px;
+  letter-spacing: 0.01em;
+  color: var(--text);
+}
+
+.step p {
+  font-size: 0.95rem;
+  line-height: 1.85;
+  color: rgba(237,233,224,0.65);
+  margin-bottom: 12px;
+}
+.step p strong { color: var(--text); font-weight: 600; }
+
+.callout {
+  background: rgba(232,160,32,0.07);
+  border-left: 2px solid var(--morocco);
+  padding: 14px 18px;
+  margin-top: 18px;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: rgba(237,233,224,0.75);
+  border-radius: 0 3px 3px 0;
+}
+.callout strong { color: var(--morocco); font-weight: 600; }
+
+/* ── CHART ── */
+.dot-plain { fill: var(--neutral); }
+.dot-europe { fill: var(--democracy); opacity: 0.8; }
+.dot-highlight { fill: var(--danger); }
+.dot-outlier-high { fill: var(--morocco); }
+.dot-outlier-low { fill: var(--danger); opacity: 0.7; }
+.reg-line { stroke: rgba(255,255,255,0.2); stroke-width:1.5; stroke-dasharray:5 4; fill:none; }
+.dot-label { font-family:'Space Mono',monospace; font-size:9.5px; fill:rgba(237,233,224,0.7); pointer-events:none; }
+.axis-line { stroke: rgba(255,255,255,0.06); }
+.axis-tick { fill:rgba(255,255,255,0.25); font-family:'Space Mono',monospace; font-size:10px; }
+
+/* ── COMPARISON GRID ── */
+.comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  margin: 36px 0;
+}
+.comparison-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+}
+.comparison-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.comparison-norm::before { background: var(--democracy); }
+.comparison-outlier::before { background: var(--morocco); }
+
+.comp-header { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
+.comp-flag { font-size:2.2rem; line-height:1; }
+.comp-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.comp-tag {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.52rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+  display: inline-block;
+}
+.tag-democracy { background: rgba(74,143,168,0.12); color: var(--democracy); }
+.tag-hybrid { background: rgba(232,160,32,0.1); color: var(--morocco); }
+
+.comp-stat-row {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.comp-stat {
+  flex: 1;
+  padding: 14px 10px;
+  border-right: 1px solid var(--border);
+  text-align: center;
+}
+.comp-stat:last-child { border-right: none; }
+.comp-stat-n {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.comp-stat-l {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.comp-text {
+  font-size: 0.9rem;
+  line-height: 1.75;
+  color: rgba(237,233,224,0.6);
+  margin-bottom: 16px;
+}
+.comp-driver {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.comp-driver strong { color: var(--text); }
+
+/* ── METHOD GRID ── */
+.method-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  margin: 28px 0;
+}
+.method-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 20px;
+}
+.method-item .mi-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.56rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--morocco);
+  margin-bottom: 7px;
+}
+.method-item .mi-val { font-size:0.92rem; font-weight:600; line-height:1.4; color:var(--text); }
+.method-item .mi-sub { font-size:0.75rem; color:var(--muted); margin-top:3px; }
+
+/* ── FOOTER ── */
+footer {
+  padding: 56px 32px;
+  border-top: 1px solid var(--border);
+  max-width: 740px;
+  margin: 0 auto;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  line-height: 1.9;
+}
+
+/* ── FADE IN ── */
+.fade-in { opacity:0; transform:translateY(18px); transition:opacity 0.7s ease,transform 0.7s ease; }
+.fade-in.visible { opacity:1; transform:none; }
+
+@media (max-width: 768px) {
+  #hero { padding: 60px 6vw; }
+  #scrolly { flex-direction: column; }
+  #sticky-chart { position:relative; height:52vh; width:100%; border-right:none; border-bottom:1px solid var(--border); }
+  #steps { width:100%; }
+  .step { padding:32px 24px; }
+  .comparison-grid,.method-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HERO / VOX POPS ── -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-kicker">Data Investigation · Climate &amp; Governance · Spring 2026</div>
+  <h1>How a constitutional monarchy is outpacing some Western countries on climate action</h1>
+  <p class="hero-sub">Degrees &amp; Democracies: Which political systems respond best to climate change?</p>
+  <p class="hero-deck">We asked people on the street whether they think democracies are better at fighting climate change. Most assumed yes. But the data tells a more complicated story.</p>
+  <div class="scroll-cue">
+    Scroll
+    <svg viewBox="0 0 16 16"><path d="M8 3v10M3 9l5 5 5-5" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></svg>
+  </div>
+</section>
+
+<!-- ── VOX POPS VIDEO ── -->
+<section class="prose-section" style="border-top:none; padding-top:80px; padding-bottom:60px;">
+  <div class="eyebrow">Vox Pops · What people think</div>
+  <div class="video-placeholder">
+    <div class="video-icon">▶</div>
+    <p class="video-label">Vox pops video coming soon</p>
+    <p class="video-sub">We asked people: do you think democracies are better at addressing climate change?</p>
+  </div>
+</section>
+
+<!-- ── SHERI: INTRO & WHY ── -->
+<section class="prose-section" style="padding-top:0;">
+  <div class="eyebrow">Why this research matters</div>
+  <h2>The vox pops reflect a widely held assumption. But our research found it's more complicated than that.</h2>
+  <p>Most people, when asked, assume that democracies are better at tackling climate change. The logic makes intuitive sense: elected governments are accountable to citizens, and citizens increasingly demand climate action. But assumptions, however reasonable, need testing.</p>
+  <p>According to the V-Dem Institute's 2026 report, <strong>74% of the world's population now lives under autocracy</strong>, with democratic indicators declining compared to the year 2000. At the same time, some of the world's most ambitious climate transitions are happening in countries that are not full democracies. So we started asking: is the relationship between democracy and climate performance as clear as people assume?</p>
+  <p>The answer, it turns out, is yes — but with outliers that force you to think harder about what is really driving climate action around the world. And that is exactly what this research set out to explore.</p>
+</section>
+
+<!-- ── SCROLLYTELLING: sticky chart + steps ── -->
+<section id="scrolly">
+  <div id="sticky-chart">
+    <div id="chart-svg-wrap">
+      <svg id="scatter" width="100%" viewBox="0 0 520 420"></svg>
+      <div id="chart-caption" style="font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;color:rgba(255,255,255,0.3);text-align:center;margin-top:12px;padding:0 8px;">
+        CCPI Score (0–100) vs. Democracy Index (0–10) · N=61
+      </div>
+    </div>
+  </div>
+
+  <div id="steps">
+
+    <!-- KRISTIN STEP 0: The research -->
+    <div class="step active" data-step="0">
+      <div class="step-inner">
+        <div class="step-num">The research</div>
+        <h2>61 countries. Three models. One clear pattern.</h2>
+        <p>We set out to answer a question that sounds simple but turns out to be surprisingly hard to test: does the type of government a country has determine how seriously it takes addressing climate change?</p>
+        <p>To find out, we merged four publicly available datasets — the <strong>CCPI 2025</strong>, the <strong>EIU Democracy Index 2024</strong>, the <strong>ND-GAIN Vulnerability Index 2023</strong>, and <strong>World Bank GDP data</strong> — and analysed 61 countries using three separate regression models.</p>
+        <div class="callout">Each dot on this chart is a country. The <strong>x-axis</strong> is democratic governance. The <strong>y-axis</strong> is climate performance. Hover any dot to explore.</div>
+      </div>
+    </div>
+
+    <!-- KRISTIN STEP 1: The pattern -->
+    <div class="step" data-step="1">
+      <div class="step-inner">
+        <div class="step-num">The finding</div>
+        <h2>The trend line slants upward — clearly and consistently.</h2>
+        <p>Countries that scored higher on democratic governance also tended to score higher on climate performance. Our bivariate regression confirmed it: <strong>a one-point increase on the Democracy Index predicts roughly 2.6 additional points on the CCPI.</strong></p>
+        <p>To put that in concrete terms: a country moving from Algeria's democracy score to Portugal's — a four-point difference — predicts approximately <strong>13 more points on the climate performance scale.</strong> That is the difference between ranking in the bottom third globally and ranking in the top quarter.</p>
+        <div class="callout">This finding does not dissolve when you account for other factors. Across all three models, the relationship between democracy and climate performance remained <strong>positive and statistically significant</strong>.</div>
+      </div>
+    </div>
+
+    <!-- KRISTIN STEP 2: GDP irrelevant -->
+    <div class="step" data-step="1">
+      <div class="step-inner">
+        <div class="step-num">The surprise</div>
+        <h2>Wealthier countries do not systematically outperform poorer ones.</h2>
+        <p>GDP was consistently insignificant across all three of our models. Once democracy is already in the model, wealth adds nothing. This suggests that <strong>political will matters more than financial capacity</strong> when it comes to climate action.</p>
+        <p>But the analysis also produced a finding we did not fully anticipate. When we introduced <strong>climate vulnerability</strong> as a control variable — measuring exposure to drought, flooding, and sea-level rise — it emerged as a strong, independent predictor of climate performance.</p>
+        <div class="callout">In our full model, vulnerability carried a coefficient of <strong>114</strong>, compared to <strong>3.3</strong> for democracy. Both effects are significant. Both matter.</div>
+      </div>
+    </div>
+
+    <!-- KRISTIN STEP 3: The outliers intro -->
+    <div class="step" data-step="3">
+      <div class="step-inner">
+        <div class="step-num">The outliers</div>
+        <h2>The implication? Urgency may substitute for accountability.</h2>
+        <p>Countries that face more severe climate impacts tend to act more — regardless of their political system. This finding helps explain what is otherwise the most striking pattern in our data.</p>
+        <p><strong>Morocco</strong> ranks 8th in the world for climate performance despite a Democracy Index of 4.97 — a constitutional monarchy with a parliamentary national legislative system, classified by the EIU as a hybrid regime. <strong>Pakistan</strong> similarly outperforms expectations. Meanwhile, the <strong>United States</strong>, a full democracy with a score of 7.85, ranks 57th. <strong>Canada</strong> ranks even lower.</p>
+        <div class="callout">Morocco and Pakistan face some of the <strong>highest climate vulnerability scores</strong> in our sample. The US and Canada face far less structural pressure to act — and our model shows it.</div>
+      </div>
+    </div>
+
+    <!-- KRISTIN STEP 4: Underperformers -->
+    <div class="step" data-step="4">
+      <div class="step-inner">
+        <div class="step-num">The underperformers</div>
+        <h2>Democracy creates the conditions for climate action. It does not deliver it automatically.</h2>
+        <p>Our findings are significant but not causal. This is a cross-sectional analysis — we capture a single point in time rather than tracking whether countries that become more democratic subsequently improve their climate performance.</p>
+        <p>The association between democracy and climate action is consistent and statistically significant across all our models. But <strong>association is not causation</strong>, and we cannot rule out other factors driving both.</p>
+        <div class="callout">What the data does make clear: <strong>the systems a country uses to govern itself are meaningfully associated with how seriously it responds to the climate crisis.</strong> And when those systems fall short, climate pressure itself appears to step in.</div>
+      </div>
+    </div>
+
+    <!-- MATHIAS STEP 5: Denmark -->
+    <div class="step" data-step="2">
+      <div class="step-inner">
+        <div class="step-num">The norm</div>
+        <h2>Denmark: what the expected pattern looks like.</h2>
+        <p>Denmark ranks 4th in the world on climate performance with a CCPI score of 78.37 — and scores 9.28 on the Democracy Index, one of the highest in the world. It is the clearest example of what the data predicts: a well-functioning democracy translating public demand for climate action into actual policy.</p>
+        <p>Denmark has committed to a 70% emissions reduction by 2030, leads globally in offshore wind energy, and has consistently ranked at or near the top of the CCPI for over a decade. Its institutions create accountability — and its citizens use them.</p>
+      </div>
+    </div>
+
+    <!-- MATHIAS STEP 6: Morocco -->
+    <div class="step" data-step="3">
+      <div class="step-inner">
+        <div class="step-num">The outlier</div>
+        <h2>Morocco: performing like a democracy without being one.</h2>
+        <p>Morocco ranks 5th globally on climate performance — ahead of France, Germany, and Sweden — with a CCPI of 68.32. A constitutional monarchy with a parliamentary national legislative system, it scores 4.97 on the Democracy Index, which the EIU classifies as a hybrid regime. By the logic of our main finding, it should not be performing this well.</p>
+        <p>But Morocco is one of the most climate-vulnerable countries in our dataset. It faces acute water scarcity, desertification, and extreme heat. The climate crisis is not a future scenario for Morocco — it is a <strong>present and structural reality</strong> that has driven significant renewable energy investment, particularly in solar power.</p>
+        <div class="callout">Morocco's Noor Ouarzazate solar complex is one of the largest in the world. Vulnerability, it seems, can drive ambition that democracy alone does not always guarantee.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── CASE STUDY COMPARISON ── -->
+<section class="prose-section">
+  <div class="eyebrow">Case studies</div>
+  <h2>The norm vs. the outlier</h2>
+  <p>Denmark and Morocco sit on opposite sides of the democracy spectrum — yet both perform strongly on climate. Side by side, they illustrate the two pathways our data reveals.</p>
+  <div class="comparison-grid">
+    <div class="comparison-card comparison-norm">
+      <div class="comp-header">
+        <span class="comp-flag">🇩🇰</span>
+        <div>
+          <div class="comp-name">Denmark</div>
+          <div class="comp-tag tag-democracy">Full Democracy</div>
+        </div>
+      </div>
+      <div class="comp-stat-row">
+        <div class="comp-stat"><div class="comp-stat-n" style="color:var(--green)">78.37</div><div class="comp-stat-l">CCPI Score</div></div>
+        <div class="comp-stat"><div class="comp-stat-n" style="color:var(--blue)">9.28</div><div class="comp-stat-l">Democracy Index</div></div>
+        <div class="comp-stat"><div class="comp-stat-n">#4</div><div class="comp-stat-l">Global Rank</div></div>
+      </div>
+      <p class="comp-text">High democracy → high accountability → strong climate policy. Denmark shows that electoral pressure from an informed public can translate directly into ambitious climate targets and delivery.</p>
+      <div class="comp-driver">Driver: <strong>Democratic accountability</strong></div>
+    </div>
+    <div class="comparison-card comparison-outlier">
+      <div class="comp-header">
+        <span class="comp-flag">🇲🇦</span>
+        <div>
+          <div class="comp-name">Morocco</div>
+          <div class="comp-tag tag-hybrid">Constitutional Monarchy · Hybrid Regime</div>
+        </div>
+      </div>
+      <div class="comp-stat-row">
+        <div class="comp-stat"><div class="comp-stat-n" style="color:var(--yellow)">68.32</div><div class="comp-stat-l">CCPI Score</div></div>
+        <div class="comp-stat"><div class="comp-stat-n" style="color:var(--blue)">4.97</div><div class="comp-stat-l">Democracy Index</div></div>
+        <div class="comp-stat"><div class="comp-stat-n">#5</div><div class="comp-stat-l">Global Rank</div></div>
+      </div>
+      <p class="comp-text">Low democracy, but high climate vulnerability. Morocco faces water scarcity, desertification and extreme heat — and has responded with major investments in solar and renewable energy that outperform most European democracies.</p>
+      <div class="comp-driver">Driver: <strong>Climate vulnerability &amp; urgency</strong></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CONCLUSION ── -->
+<section class="prose-section">
+  <div class="eyebrow">What this means</div>
+  <h2>Conclusion: systems matter — but so does pressure.</h2>
+  <p>Our data tells a nuanced story. Democracy matters for climate action — but it is not the whole story. The political system a country has shapes its capacity and incentive to respond to the climate crisis. But real-world climate pressure — the lived experience of drought, flooding, and heat — can motivate action even in countries where democratic accountability is weak.</p>
+  <p>The finding that should concern citizens of wealthy democracies most is not Morocco's overperformance. It is the consistent underperformance of the United States, Canada, Australia, and Japan. These are countries with the institutions, the resources, and the democratic mandates to lead on climate. The data suggests they are <strong>choosing not to</strong>.</p>
+  <p>Democracy, our analysis suggests, is a necessary but not sufficient condition for serious climate action. What fills the gap between having democratic institutions and actually using them to protect the climate is a question our data cannot answer — but one that citizens in every democracy should be asking.</p>
+</section>
+
+<!-- ── METHODOLOGY ── -->
+<section class="prose-section">
+  <div class="eyebrow">Methodology</div>
+  <h2>How we did this</h2>
+  <p>We merged four publicly available datasets and ran three OLS regression models — bivariate, multivariate without region, and multivariate with region (Africa as reference category) — to isolate the effect of democratic governance on climate performance.</p>
+  <div class="method-grid">
+    <div class="method-item"><div class="mi-label">Climate data</div><div class="mi-val">CCPI 2025</div><div class="mi-sub">Germanwatch · 63 countries + EU</div></div>
+    <div class="method-item"><div class="mi-label">Democracy data</div><div class="mi-val">EIU Democracy Index 2024</div><div class="mi-sub">Our World in Data · 165 countries</div></div>
+    <div class="method-item"><div class="mi-label">Vulnerability</div><div class="mi-val">ND-GAIN Country Index 2023</div><div class="mi-sub">University of Notre Dame</div></div>
+    <div class="method-item"><div class="mi-label">Economic control</div><div class="mi-val">GDP 2024</div><div class="mi-sub">World Bank · current USD</div></div>
+    <div class="method-item"><div class="mi-label">Final sample</div><div class="mi-val">N = 61 countries</div><div class="mi-sub">After merging &amp; dropping missing values</div></div>
+    <div class="method-item"><div class="mi-label">Analysis</div><div class="mi-val">R · OLS regression</div><div class="mi-sub">Full output in academic appendix</div></div>
+  </div>
+  <p>A key limitation: this is a cross-sectional analysis. We capture a single point in time rather than tracking changes over time. The association is consistent and significant, but association is not causation.</p>
+  <p style="font-size:0.85rem;color:var(--muted);margin-top:8px;"><em>*AI Declaration: Claude (Anthropic) was used to support R coding, debugging, and building this web piece.</em></p>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <p>Data: CCPI 2025 (Germanwatch / CAN International); EIU Democracy Index 2024 (Our World in Data); ND-GAIN Country Index 2023 (University of Notre Dame); World Bank GDP 2024.</p>
+  <p style="margin-top:10px">By Kristin Engel, Mathias Huber &amp; Sherehan Elazazy · Applied Quantitative Research &amp; Journalistic Practice · DMJX · Spring 2026</p>
+</footer>
+
+<script>
+// ── DATA ──
+const data = [
+  {c:"Denmark",ccpi:78.37,di:9.28,r:"Europe",flag:"🇩🇰"},
+  {c:"Netherlands",ccpi:69.60,di:9.00,r:"Europe",flag:"🇳🇱"},
+  {c:"United Kingdom",ccpi:69.29,di:8.34,r:"Europe",flag:"🇬🇧"},
+  {c:"Philippines",ccpi:68.41,di:6.63,r:"Asia",flag:"🇵🇭"},
+  {c:"Morocco",ccpi:68.32,di:4.97,r:"Africa",flag:"🇲🇦"},
+  {c:"Norway",ccpi:68.21,di:9.81,r:"Europe",flag:"🇳🇴"},
+  {c:"India",ccpi:67.99,di:7.29,r:"Asia",flag:"🇮🇳"},
+  {c:"Sweden",ccpi:67.62,di:9.39,r:"Europe",flag:"🇸🇪"},
+  {c:"Chile",ccpi:67.29,di:7.83,r:"Americas",flag:"🇨🇱"},
+  {c:"Luxembourg",ccpi:67.29,di:8.88,r:"Europe",flag:"🇱🇺"},
+  {c:"Estonia",ccpi:66.79,di:8.13,r:"Europe",flag:"🇪🇪"},
+  {c:"Portugal",ccpi:66.59,di:8.08,r:"Europe",flag:"🇵🇹"},
+  {c:"Germany",ccpi:64.91,di:8.73,r:"Europe",flag:"🇩🇪"},
+  {c:"Lithuania",ccpi:63.05,di:7.59,r:"Europe",flag:"🇱🇹"},
+  {c:"Spain",ccpi:61.57,di:8.13,r:"Europe",flag:"🇪🇸"},
+  {c:"Egypt",ccpi:60.52,di:2.79,r:"Africa",flag:"🇪🇬"},
+  {c:"Vietnam",ccpi:60.04,di:2.62,r:"Asia",flag:"🇻🇳"},
+  {c:"Greece",ccpi:59.41,di:8.07,r:"Europe",flag:"🇬🇷"},
+  {c:"Austria",ccpi:59.40,di:8.28,r:"Europe",flag:"🇦🇹"},
+  {c:"Thailand",ccpi:59.19,di:6.27,r:"Asia",flag:"🇹🇭"},
+  {c:"France",ccpi:59.18,di:7.99,r:"Europe",flag:"🇫🇷"},
+  {c:"Nigeria",ccpi:59.16,di:4.16,r:"Africa",flag:"🇳🇬"},
+  {c:"Colombia",ccpi:57.49,di:6.35,r:"Americas",flag:"🇨🇴"},
+  {c:"Brazil",ccpi:57.25,di:6.49,r:"Americas",flag:"🇧🇷"},
+  {c:"Ireland",ccpi:57.17,di:9.19,r:"Europe",flag:"🇮🇪"},
+  {c:"Slovenia",ccpi:57.16,di:7.21,r:"Europe",flag:"🇸🇮"},
+  {c:"Pakistan",ccpi:56.85,di:2.84,r:"Asia",flag:"🇵🇰"},
+  {c:"Romania",ccpi:56.45,di:5.99,r:"Europe",flag:"🇷🇴"},
+  {c:"Switzerland",ccpi:56.10,di:9.32,r:"Europe",flag:"🇨🇭"},
+  {c:"Malta",ccpi:55.78,di:7.93,r:"Europe",flag:"🇲🇹"},
+  {c:"Belgium",ccpi:54.89,di:7.64,r:"Europe",flag:"🇧🇪"},
+  {c:"Latvia",ccpi:54.35,di:7.66,r:"Europe",flag:"🇱🇻"},
+  {c:"Finland",ccpi:54.24,di:9.30,r:"Europe",flag:"🇫🇮"},
+  {c:"South Africa",ccpi:52.74,di:7.16,r:"Africa",flag:"🇿🇦"},
+  {c:"Mexico",ccpi:52.66,di:5.32,r:"Americas",flag:"🇲🇽"},
+  {c:"Croatia",ccpi:51.83,di:6.50,r:"Europe",flag:"🇭🇷"},
+  {c:"New Zealand",ccpi:51.06,di:9.61,r:"Oceania",flag:"🇳🇿"},
+  {c:"Indonesia",ccpi:50.84,di:6.44,r:"Asia",flag:"🇮🇩"},
+  {c:"Italy",ccpi:49.81,di:7.58,r:"Europe",flag:"🇮🇹"},
+  {c:"Cyprus",ccpi:49.45,di:7.38,r:"Europe",flag:"🇨🇾"},
+  {c:"Hungary",ccpi:48.81,di:6.51,r:"Europe",flag:"🇭🇺"},
+  {c:"Slovakia",ccpi:48.44,di:7.21,r:"Europe",flag:"🇸🇰"},
+  {c:"Poland",ccpi:47.86,di:7.04,r:"Europe",flag:"🇵🇱"},
+  {c:"Malaysia",ccpi:47.59,di:7.11,r:"Asia",flag:"🇲🇾"},
+  {c:"Czechia",ccpi:47.57,di:8.08,r:"Europe",flag:"🇨🇿"},
+  {c:"Bulgaria",ccpi:47.13,di:6.34,r:"Europe",flag:"🇧🇬"},
+  {c:"Algeria",ccpi:45.96,di:3.55,r:"Africa",flag:"🇩🇿"},
+  {c:"Australia",ccpi:45.52,di:8.85,r:"Oceania",flag:"🇦🇺"},
+  {c:"Turkey",ccpi:45.06,di:4.26,r:"Asia",flag:"🇹🇷"},
+  {c:"Uzbekistan",ccpi:44.51,di:2.10,r:"Asia",flag:"🇺🇿"},
+  {c:"China",ccpi:44.15,di:2.11,r:"Asia",flag:"🇨🇳"},
+  {c:"Belarus",ccpi:42.64,di:1.99,r:"Europe",flag:"🇧🇾"},
+  {c:"United States",ccpi:40.58,di:7.85,r:"Americas",flag:"🇺🇸"},
+  {c:"Japan",ccpi:39.23,di:8.48,r:"Asia",flag:"🇯🇵"},
+  {c:"Argentina",ccpi:35.96,di:6.51,r:"Americas",flag:"🇦🇷"},
+  {c:"Kazakhstan",ccpi:33.43,di:3.08,r:"Asia",flag:"🇰🇿"},
+  {c:"Canada",ccpi:28.37,di:8.69,r:"Americas",flag:"🇨🇦"},
+  {c:"South Korea",ccpi:26.42,di:7.75,r:"Asia",flag:"🇰🇷"},
+  {c:"Russia",ccpi:23.54,di:2.03,r:"Europe",flag:"🇷🇺"},
+  {c:"UAE",ccpi:19.54,di:3.07,r:"Asia",flag:"🇦🇪"},
+  {c:"Saudi Arabia",ccpi:18.15,di:2.08,r:"Asia",flag:"🇸🇦"},
+  {c:"Iran",ccpi:17.47,di:1.96,r:"Asia",flag:"🇮🇷"},
+];
+
+const LABELED = ["Denmark","Morocco","United States","Norway","Pakistan","Saudi Arabia","Canada","China","Iran","Russia"];
+
+// ── HERO CANVAS ──
+(function() {
+  const canvas = document.getElementById('hero-canvas');
+  const ctx = canvas.getContext('2d');
+  function resize() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  const pts = data.map(d => ({
+    x: (d.di / 10) * canvas.width * 0.85 + canvas.width * 0.05,
+    y: (1 - d.ccpi / 100) * canvas.height * 0.85 + canvas.height * 0.05,
+    vx: (Math.random()-0.5)*0.2, vy: (Math.random()-0.5)*0.2
+  }));
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pts.forEach((p,i) => {
+      p.x += p.vx; p.y += p.vy;
+      if(p.x<0||p.x>canvas.width) p.vx*=-1;
+      if(p.y<0||p.y>canvas.height) p.vy*=-1;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(232,87,60,0.5)';
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── SCATTER PLOT ──
+(function() {
+  const W=520, H=420, ml=50, mr=20, mt=20, mb=50;
+  const iw=W-ml-mr, ih=H-mt-mb;
+  const svg = d3.select('#scatter');
+  const g = svg.append('g').attr('transform',`translate(${ml},${mt})`);
+  const x = d3.scaleLinear().domain([0,10.5]).range([0,iw]);
+  const y = d3.scaleLinear().domain([10,85]).range([ih,0]);
+
+  // Regression
+  const xm = d3.mean(data,d=>d.di), ym = d3.mean(data,d=>d.ccpi);
+  const slope = d3.sum(data,d=>(d.di-xm)*(d.ccpi-ym)) / d3.sum(data,d=>(d.di-xm)**2);
+  const inter = ym - slope*xm;
+
+  // Grid
+  [2,4,6,8,10].forEach(v => {
+    g.append('line').attr('x1',x(v)).attr('x2',x(v)).attr('y1',0).attr('y2',ih).attr('class','axis-line');
+  });
+  [20,30,40,50,60,70,80].forEach(v => {
+    g.append('line').attr('x1',0).attr('x2',iw).attr('y1',y(v)).attr('y2',y(v)).attr('class','axis-line');
+  });
+
+  // Reg line (initially hidden)
+  const regLine = g.append('line')
+    .attr('class','reg-line')
+    .attr('x1',x(0)).attr('y1',y(inter)).attr('x2',x(10.5)).attr('y2',y(inter+slope*10.5))
+    .attr('opacity',0);
+
+  // Tooltip
+  const tip = d3.select('body').append('div')
+    .style('position','fixed').style('background','#1a1a1a')
+    .style('border','1px solid rgba(255,255,255,0.12)')
+    .style('padding','10px 14px').style('border-radius','6px')
+    .style('font-family','DM Sans, sans-serif').style('font-size','13px')
+    .style('color','#e8e4dc').style('pointer-events','none')
+    .style('opacity',0).style('transition','opacity 0.15s')
+    .style('z-index','9999').style('line-height','1.6').style('max-width','180px');
+
+  // Dots
+  const dots = g.selectAll('.dot').data(data).enter().append('circle')
+    .attr('class','dot dot-plain')
+    .attr('cx',d=>x(d.di)).attr('cy',d=>y(d.ccpi))
+    .attr('r',4).style('cursor','pointer')
+    .on('mousemove',(e,d) => {
+      tip.html(`<strong style="display:block;margin-bottom:4px">${d.flag} ${d.c}</strong>
+        <span style="color:#7a756c;font-size:11px">CCPI</span> <strong>${d.ccpi}</strong><br>
+        <span style="color:#7a756c;font-size:11px">Democracy</span> <strong>${d.di}</strong>`)
+        .style('opacity',1)
+        .style('left',(e.clientX+14)+'px').style('top',(e.clientY-10)+'px');
+    })
+    .on('mouseleave',()=>tip.style('opacity',0));
+
+  // Labels for key countries
+  const labelData = data.filter(d=>LABELED.includes(d.c));
+  const labels = g.selectAll('.dot-label-g').data(labelData).enter().append('g').attr('class','dot-label-g').attr('opacity',0);
+  labels.append('text').attr('class','dot-label')
+    .attr('x',d=>x(d.di)+(d.di>5?8:-8)).attr('y',d=>y(d.ccpi)+4)
+    .attr('text-anchor',d=>d.di>5?'start':'end')
+    .text(d=>d.c);
+
+  // Axes
+  [0,2,4,6,8,10].forEach(v => {
+    g.append('text').attr('class','axis-tick').attr('x',x(v)).attr('y',ih+20).attr('text-anchor','middle').text(v);
+  });
+  [20,40,60,80].forEach(v => {
+    g.append('text').attr('class','axis-tick').attr('x',-8).attr('y',y(v)+4).attr('text-anchor','end').text(v);
+  });
+
+  // Step-based dot styling
+  const stepStyles = [
+    () => { // step 0: all plain
+      dots.attr('class','dot dot-plain').attr('r',4);
+      regLine.attr('opacity',0);
+      labels.attr('opacity',0);
+    },
+    () => { // step 1: trend
+      dots.attr('class','dot dot-plain').attr('r',4);
+      regLine.attr('opacity',1);
+      labels.attr('opacity',0);
+    },
+    () => { // step 2: highlight Europe
+      dots.attr('class',d=>d.r==='Europe'?'dot dot-europe':'dot dot-plain')
+          .attr('r',d=>d.r==='Europe'?5:3);
+      regLine.attr('opacity',0.3);
+      labels.attr('opacity',d=>['Denmark','Norway'].includes(d.c)?1:0);
+    },
+    () => { // step 3: highlight Morocco
+      dots.attr('class',d=>d.c==='Morocco'?'dot dot-outlier-high':d.r==='Europe'?'dot dot-europe':'dot dot-plain')
+          .attr('r',d=>d.c==='Morocco'?8:d.r==='Europe'?4:3);
+      regLine.attr('opacity',0.3);
+      labels.attr('opacity',d=>['Morocco','Denmark'].includes(d.c)?1:0);
+    },
+    () => { // step 4: highlight underperformers
+      dots.attr('class',d=>['United States','Canada','Australia'].includes(d.c)?'dot dot-highlight':
+                           d.c==='Morocco'?'dot dot-outlier-high':
+                           d.r==='Europe'?'dot dot-europe':'dot dot-plain')
+          .attr('r',d=>['United States','Canada','Australia'].includes(d.c)?7:d.c==='Morocco'?7:3);
+      regLine.attr('opacity',0.5);
+      labels.attr('opacity',d=>['United States','Canada','Morocco'].includes(d.c)?1:0);
+    }
+  ];
+
+  window._applyStep = (n) => { if(stepStyles[n]) stepStyles[n](); };
+  stepStyles[0]();
+})();
+
+// ── SCROLLY OBSERVER ──
+(function() {
+  const steps = document.querySelectorAll('.step');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if(e.isIntersecting) {
+        steps.forEach(s=>s.classList.remove('active'));
+        e.target.classList.add('active');
+        window._applyStep(+e.target.dataset.step);
+      }
+    });
+  }, { threshold: 0.5 });
+  steps.forEach(s=>obs.observe(s));
+})();
+</script>
+</body>
+</html>
